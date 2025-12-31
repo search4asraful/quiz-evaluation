@@ -33,6 +33,7 @@ class GoogleAuthController extends Controller
 
         Auth::guard('web')->login($user);
 
+        notyf()->success('Logged in successfully via Google');
         return redirect()->route('student.tests.index');
     }
 }

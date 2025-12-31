@@ -15,11 +15,23 @@
             <input type="text" name="question_text" placeholder="Question Text" class="border p-2 w-full mb-2" required>
             <input type="number" name="marks" placeholder="Marks" class="border p-2 w-full mb-2" required>
 
-            @for ($i=0; $i<4; $i++)
-                <div class="flex mb-2 items-center">
-                    <input type="text" name="options[{{ $i }}]" placeholder="Option {{ $i+1 }}" class="border p-2 w-full" required>
-                    <input type="radio" name="correct_option" value="{{ $i }}" class="ml-2">
+            @for ($i = 0; $i < 4; $i++)
+                <div class="flex items-center mb-2">
+                    <input type="text"
+                        name="options[{{ $i }}][text]"
+                        class="border p-2 w-full"
+                        placeholder="Option {{ $i + 1 }}"
+                        required>
+
+                    <input type="checkbox"
+                        name="correct_options[]"
+                        value="{{ $i }}"
+                        class="ml-2">
                 </div>
+                {{-- show input error --}}
+                @error('options.' . $i . '.text')
+                    <div class="text-red-600 mb-4">{{ $message }}</div>
+                @enderror
             @endfor
 
             <button class="bg-green-600 text-white px-4 py-2 mt-2">Save Question</button>
@@ -38,10 +50,19 @@
                 @endforeach
             </ul>
 
-            <form method="POST" action="{{ route('admin.tests.questions.destroy', [$test,$q]) }}">
-                @csrf @method('DELETE')
-                <button class="text-red-600 mt-2">Delete</button>
-            </form>
+            <div class="mt-2 space-x-3">
+                <a href="{{ route('admin.tests.questions.edit', [$test, $q]) }}"
+                class="text-blue-600">
+                    Edit
+                </a>
+
+                <form method="POST"
+                    action="{{ route('admin.tests.questions.destroy', [$test,$q]) }}"
+                    class="inline">
+                    @csrf @method('DELETE')
+                    <button class="text-red-600">Delete</button>
+                </form>
+            </div>
         </div>
     @empty
         <div class="bg-yellow-100 p-4 rounded">
