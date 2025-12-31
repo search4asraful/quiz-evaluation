@@ -10,11 +10,12 @@
     @forelse($tests as $test)
         <div class="bg-white p-4 mb-4 shadow">
             <h3 class="font-bold">{{ $test->title }}</h3>
-            <p>Starts: {{ $test->starts_at }} | Ends: {{ $test->ends_at }}</p>
+            <p>Starts: {{ \Carbon\Carbon::parse($test->starts_at)->toDayDateTimeString() }} | Ends: {{ \Carbon\Carbon::parse($test->ends_at)->toDayDateTimeString() }}</p>
 
             <div class="mt-2 space-x-2">
                 <a href="{{ route('admin.tests.edit', $test) }}" class="text-blue-600">Edit</a>
                 <a href="{{ route('admin.tests.questions.index', $test) }}" class="text-green-600">Manage Questions</a>
+                <a href="{{ route('admin.tests.submissions.index', $test) }}" class="text-blue-600">View Submissions</a>
                 <form action="{{ route('admin.tests.destroy', $test) }}" method="POST" class="inline">
                     @csrf
                     @method('DELETE')

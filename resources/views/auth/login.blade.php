@@ -52,5 +52,34 @@
                 {{ __('Log in') }}
             </x-primary-button>
         </div>
+
     </form>
+
+    <div class="absolute top-4 right-6 text-right space-y-4">
+        Via clicking the buttons below, the email and password fields will be auto-filled with demo credentials. <br>
+
+        <div class="space-x-4">
+            <button id="admin" class="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition">
+                Fill Admin Credentials
+            </button>
+
+            <button id="student" class="px-3 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 transition">
+                Fill Student Credentials
+            </button>
+        </div>
+    </div>
+
+    @push('scripts')
+        <script>
+            document.getElementById('admin').addEventListener('click', function() {
+                document.getElementById('email').value = 'admin@example.com';
+                document.getElementById('password').value = 'password';
+            });
+
+            document.getElementById('student').addEventListener('click', function() {
+                document.getElementById('email').value = 'student@example.com';
+                document.getElementById('password').value = 'password';
+            });
+        </script>
+    @endpush
 </x-guest-layout>

@@ -3,30 +3,34 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TestStoreRequest;
+use App\Models\Submission;
 use App\Models\Test;
-use Illuminate\Http\Request;
 
 class TestController extends Controller
 {
+    /**
+     * Display a listing of tests.
+     */
     public function index()
     {
         $tests = Test::latest()->get();
         return view('admin.tests.index', compact('tests'));
     }
 
+    /**
+     * Show the form for creating a new test.
+     */
     public function create()
     {
         return view('admin.tests.create');
     }
 
-    public function store(Request $request)
+    /**
+     * Store a newly created test in storage.
+     */
+    public function store(TestStoreRequest $request)
     {
-        $request->validate([
-            'title' => 'required|string',
-            'starts_at' => 'required|date',
-            'ends_at' => 'required|date|after:starts_at',
-        ]);
-
         Test::create([
             'title' => $request->title,
             'starts_at' => $request->starts_at,
@@ -34,32 +38,46 @@ class TestController extends Controller
             'created_by' => auth('web')->id(),
         ]);
 
-        return redirect()->route('admin.tests.index')
-            ->with('success', 'Test created successfully');
+        notyf()->success('Test created successfully');
+        return redirect()->route('admin.tests.index');
     }
 
+    /**
+     * Show the form for editing the specified test.
+     */
     public function edit(Test $test)
     {
         return view('admin.tests.edit', compact('test'));
     }
 
-    public function update(Request $request, Test $test)
+    /**
+     * Update the specified test in storage.
+     */
+    public function update(TestStoreRequest $request, Test $test)
     {
-        $request->validate([
-            'title' => 'required|string',
-            'starts_at' => 'required|date',
-            'ends_at' => 'required|date|after:starts_at',
-        ]);
+        $test->update($request->only('title', 'starts_at', 'ends_at'));
 
-        $test->update($request->only('title','starts_at','ends_at'));
-
-        return redirect()->route('admin.tests.index')
-            ->with('success', 'Test updated');
+        notyf()->success('Test updated successfully');
+        return redirect()->route('admin.tests.index');
     }
 
+    /**
+     * Remove the specified test from storage.
+     */
     public function destroy(Test $test)
     {
         $test->delete();
-        return back()->with('success', 'Test deleted');
+        notyf()->success('Test deleted successfully');
+        return back();
+    }
+
+    /**
+     * show submissions for a specific test.
+     */
+    public function submissions($testId)
+    {
+        $submissions = Submission::where('test_id', $testId)->get();
+
+        return view('admin.tests.submissions', compact('submissions'));
     }
 }

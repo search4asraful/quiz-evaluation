@@ -14,7 +14,7 @@ use App\Http\Controllers\Auth\GoogleAuthController;
 
 Route::middleware('guest')->group(function () {
     Route::get('/auth/google', [GoogleAuthController::class, 'redirect'])->name('google.login');
-    Route::get('/login/google/callback', [GoogleAuthController::class, 'callback']);
+    Route::get('/auth/google/callback', [GoogleAuthController::class, 'callback']);
 
     Route::get('register', [RegisteredUserController::class, 'create'])
         ->name('register');

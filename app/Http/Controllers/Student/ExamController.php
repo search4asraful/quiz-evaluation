@@ -4,86 +4,73 @@ namespace App\Http\Controllers\Student;
 
 use App\Http\Controllers\Controller;
 use App\Models\Answer;
-use App\Models\Option;
 use App\Models\Submission;
 use App\Models\Test;
 use Illuminate\Http\Request;
+use App\Services\TestSubmissionService;
 
 class ExamController extends Controller
 {
+    /**
+        * Display list of available tests.
+    */
     public function index()
     {
         $now = now();
+        $tests = Test::orderBy('starts_at', 'desc')->get();
 
-        $tests = Test::where('starts_at','<=',$now)
-            ->where('ends_at','>=',$now)
-            ->get();
-
-        return view('student.tests.index', compact('tests'));
+        return view('student.tests.index', compact('tests', 'now'));
     }
 
+    /**
+        * Show the test for taking.
+    */
     public function show(Test $test)
     {
         if ($test->submissions()
             ->where('user_id', auth('web')->id())
-            ->exists()) {
-
-            return redirect()
-                ->route('student.tests.index')
-                ->with('error','You already submitted this test');
+            ->exists()
+        ) {
+            notyf()->error('You already submitted this test');
+            return redirect()->route('student.tests.index');
+        } else if ($test->expired()) {
+            notyf()->error('This test has expired');
+            return redirect()->route('student.tests.index');
+        } else if ($test->ongoing()) {
+            $test->load('questions.options');
+            return view('student.exam', compact('test'));
+        } else {
+            notyf()->info('This test has not started yet');
+            return redirect()->route('student.tests.index');
         }
-
-        $test->load('questions.options');
-
-        return view('student.exam', compact('test'));
     }
 
-    public function submit(Request $request, Test $test)
+    /**
+        * Submit test answers.
+    */
+    public function submit(Request $request, Test $test, TestSubmissionService $service)
     {
         $userId = auth('web')->id();
 
-        if (Submission::where('test_id',$test->id)
-            ->where('user_id',$userId)
-            ->exists()) {
-
-            return redirect()->route('student.tests.index')
-                ->with('error','Test already submitted');
+        try {
+            $submission = $service->submit($request, $test, $userId);
+        } catch (\Exception $e) {
+            notyf()->error('An error occurred while submitting the test');
+            return redirect()->route('student.tests.index');
         }
 
-        $totalMarks = $test->questions->sum('marks');
-        $obtainedMarks = 0;
-
-        $submission = Submission::create([
-            'test_id' => $test->id,
-            'user_id' => $userId,
-            'total_marks' => $totalMarks,
-            'obtained_marks' => 0,
-        ]);
-
-        foreach ($test->questions as $question) {
-            $optionId = $request->answers[$question->id] ?? null;
-            if (!$optionId) continue;
-
-            $option = Option::find($optionId);
-            $isCorrect = $option && $option->is_correct;
-
-            if ($isCorrect) {
-                $obtainedMarks += $question->marks;
-            }
-
-            Answer::create([
-                'submission_id' => $submission->id,
-                'question_id' => $question->id,
-                'option_id' => $optionId,
-                'is_correct' => $isCorrect,
-            ]);
+        if (!$submission) {
+            notyf()->error('You have already submitted this test');
+            return redirect()->route('student.tests.index');
         }
 
-        $submission->update(['obtained_marks'=>$obtainedMarks]);
-
-        return redirect()->route('student.tests.result',$submission);
+        notyf()->success('Test submitted successfully');
+        return redirect()->route('student.tests.result', $submission);
     }
 
+    /**
+        * Display result based on submissions.
+    */
     public function result(Submission $submission)
     {
         return view('student.tests.result', compact('submission'));

@@ -11,10 +11,12 @@
                 @if($q->options->isEmpty())
                     <p class="text-red-600">No options available for this question.</p>
                 @else
-                    @foreach($q->options as $opt)
+                    @foreach ($q->options as $opt)
                         <label class="block">
-                            <input type="radio" name="answers[{{ $q->id }}]" value="{{ $opt->id }}">
-                            {{ $opt->option_text ?? 'Option missing' }}
+                            <input type="checkbox"
+                                name="answers[{{ $q->id }}][]"
+                                value="{{ $opt->id }}">
+                            {{ $opt->option_text }}
                         </label>
                     @endforeach
                 @endif
